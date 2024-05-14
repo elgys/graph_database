@@ -1,13 +1,13 @@
-
 /**
 Table is the base of the sate of a table files in this type are orderd in the following way.
 */
 
+#[feature(test)]
 pub mod table 
 {
     use std::{fs::File, mem};
 
-
+ 
     #[derive(Debug,Clone, Copy)]
     pub struct TableHeader
     {
@@ -28,9 +28,13 @@ pub mod table
    
          pub fn file_format(&self) -> [u8; 16]
          {
-             let mut file_binary: [u8; 16];
-             file_binary = []
-             return file_binary;
+            let file_binary: [u8; 16] = [self.signature.to_be_bytes()[0],self.signature.to_be_bytes()[1],
+                self.version.to_be_bytes()[0], self.version.to_be_bytes()[1],
+                self.b_tree_loc.to_be_bytes()[0], self.b_tree_loc.to_be_bytes()[1], self.b_tree_loc.to_be_bytes()[2], self.b_tree_loc.to_be_bytes()[3],
+                self.data_loc.to_be_bytes()[0], self.data_loc.to_be_bytes()[1], self.data_loc.to_be_bytes()[2], self.data_loc.to_be_bytes()[3],
+                self.relationship_loc.to_be_bytes()[0], self.relationship_loc.to_be_bytes()[1], self.relationship_loc.to_be_bytes()[2], self.relationship_loc.to_be_bytes()[3]];
+        
+            return file_binary;
          }
     }
 
@@ -51,7 +55,9 @@ pub mod table
     #[cfg(test)]
     mod test_table 
     {
+        extern crate test;
         use super::*;
+        use test::Bencher;
 
 
         fn correct_header () -> TableHeader

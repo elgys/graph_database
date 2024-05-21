@@ -13,6 +13,7 @@ pub mod table
     {
         signature: u16, // 2
         version: u16,  // 2
+        pub page_size: u32, // 4
         pub b_tree_loc: u32, // 4
         pub data_loc: u32, // 4
         pub relationship_loc: u32, // 4
@@ -26,15 +27,16 @@ pub mod table
             else {return Err("File has a incorrect header".into());}
         }
 
-         pub fn file_format(&self) -> [u8; 16]
+         pub fn file_format(&self) -> [u8; 20]
          {
-            let file_binary: [u8; 16];
+            let file_binary: [u8; 20];
             let sig = self.signature.to_be_bytes();
             let ver = self.version.to_be_bytes();
+            let p_z = self.page_size.to_be_bytes();
             let b_t_l = self.b_tree_loc.to_be_bytes();
             let d_l = self.data_loc.to_be_bytes();
             let r_l = self.relationship_loc.to_be_bytes();
-            file_binary = [sig[0], sig[1], ver[0], ver[1], b_t_l[0], b_t_l[1], b_t_l[2], b_t_l[3], d_l[0], d_l[1], d_l[2],d_l[3], r_l[0], r_l[1], r_l[2], r_l[3]];
+            file_binary = [sig[0], sig[1], ver[0], ver[1],p_z[0], p_z[1], p_z[2], p_z[3], b_t_l[0], b_t_l[1], b_t_l[2], b_t_l[3], d_l[0], d_l[1], d_l[2],d_l[3], r_l[0], r_l[1], r_l[2], r_l[3]];
             return file_binary;
          }
 
@@ -43,7 +45,6 @@ pub mod table
             file.write_all(&self.file_format())?;
             Ok(())
         }
-        
 
     }
 
@@ -53,6 +54,7 @@ pub mod table
         {
             signature : 0x4442,
             version : 0,
+            page_size : 0,
             b_tree_loc : 0,
             data_loc : 0,
             relationship_loc : 0,
@@ -94,7 +96,7 @@ pub mod table
         {
             let test = correct_header();
             let text = test.file_format();
-            assert_eq!([0x44u8, 0x42u8, 0x00u8, 0x00u8, 0x00u8, 0x00u8, 0x00u8, 0x00u8, 0x00u8, 
+            assert_eq!([0x44u8, 0x42u8, 0x00u8, 0x00u8, 0x00u8, 0x00u8, 0x00u8, 0x00u8, 0x00u8, 0x00u8, 0x00u8, 0x00u8, 0x00u8, 
                 0x00u8, 0x00u8, 0x00u8, 0x00u8, 0x00u8, 0x00u8, 0x00u8], text )
         }
 
@@ -104,16 +106,15 @@ pub mod table
             let test = correct_header();
             let mut file = fs::File::create("foo.txt").expect("the file exist already.");
             test.write_to_file(&mut file).expect("can't write to file");
-            let mut content = [0;16];
+            let mut content = [0;20];
             file = fs::File::open("foo.txt").expect("can't open the file to read.");
             file.read_exact(& mut content).expect("can't read from the file");
-            assert_eq!(content, [0x44u8, 0x42u8, 0x00u8, 0x00u8, 0x00u8, 0x00u8, 0x00u8, 0x00u8, 0x00u8, 
-            0x00u8, 0x00u8, 0x00u8, 0x00u8, 0x00u8, 0x00u8, 0x00u8]);
+            assert_eq!(content, [0x44u8, 0x42u8, 0x00u8, 0x00u8, 0x00u8, 0x00u8, 0x00u8, 0x00u8, 0x00u8, 0x00u8, 0x00u8, 0x00u8, 0x00u8, 
+                0x00u8, 0x00u8, 0x00u8, 0x00u8, 0x00u8, 0x00u8, 0x00u8]);
             fs::remove_file("foo.txt").expect("this file doesn't exist");
         }
 
     }
-    
 }
 
 

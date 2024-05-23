@@ -28,9 +28,12 @@ pub mod table
    
          pub fn file_format(&self) -> [u8; 16]
          {
-             let mut file_binary: [u8; 16];
-             file_binary = []
-             return file_binary;
+            let mut file_binary: [u8; 16];
+            file_binary = [0x44,0x42,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+            let mut array_version = &mut file_binary[2 .. 4];
+            array_version = self.version.to_le_bytes();
+
+            return file_binary;
          }
     }
 

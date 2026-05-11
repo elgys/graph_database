@@ -5,12 +5,16 @@ Made by: Levi van der Griendt
 
 macro_rules! number_deserilize {
     ($t:ty, $name:ident,$n:ident, $size:literal) => {
-        pub fn $name(input: &[u8]) -> Result<$t, std::array::TryFromSliceError> {
-            let int_arrays: Result<[u8; $size], std::array::TryFromSliceError> =
-                input[..$size].try_into();
+        pub fn $name(input: &[u8]) -> Result<$t, DeserilizeError> {
+            let int_arrays = input[..$size].try_into();
             let int: [u8; $size] = match int_arrays {
                 Ok(num) => num,
-                Err(e) => return Err(e),
+                Err(e) => {
+                    return Err(DeserilizeError {
+                        type_input: "$n".to_owned(),
+                        text: "Something went wrong reading a number.".to_owned(),
+                    })
+                }
             };
             let number: $t = $n::from_be_bytes(int);
             return Ok(number)
@@ -18,10 +22,13 @@ macro_rules! number_deserilize {
     };
 }
 
-use std::array::TryFromSliceError;
-
 pub mod Deserilizer {
-    use std::{array::TryFromSliceError, io::Read};
+    use std::{
+        array::TryFromSliceError,
+        error::Error,
+        fmt::{self, Display},
+        io::Read,
+    };
 
     number_deserilize!(i8, i8_deserilize, i8, 1);
     number_deserilize!(u8, u8_deserilize, u8, 1);
@@ -34,15 +41,33 @@ pub mod Deserilizer {
     number_deserilize!(i128, i128_deserilize, i128, 16);
     number_deserilize!(u128, u128_deserilize, u128, 16);
 
-    pub fn uft8_deserilize(input: &[u8], size: usize) -> String {
+    pub fn uft8_deserilize(input: &[u8], size: usize) -> Result<String, DeserilizeError> {
         let text: &[u8] = &input[..size];
         let s: String = match str::from_utf8(text) {
             Ok(v) => v.to_string(),
-            Err(e) => panic!("Invalid UTF-8 sequence: {}", e),
+            Err(e) => {
+                return Err(DeserilizeError {
+                    type_input: "string".to_owned(),
+                    text: "the string is not a correct uft-8".to_owned(),
+                });
+            }
         };
 
-        return s;
+        return Ok(s);
     }
+
+    #[derive(Debug, Clone)]
+    pub struct DeserilizeError {
+        type_input: String,
+        text: String,
+    }
+
+    impl Display for DeserilizeError {
+        fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+            write!(f, "{}: {}", self.type_input, self.text)
+        }
+    }
+    impl Error for DeserilizeError {}
 }
 
 #[cfg(test)]

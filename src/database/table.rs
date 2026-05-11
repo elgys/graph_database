@@ -7,7 +7,7 @@ pub mod table {
     use std::{fs, io::Write};
 
     #[derive(Debug, Clone, Copy)]
-    pub struct TableHeader {
+    pub struct FileHeader {
         signature: u16,            // 2
         version: u16,              // 2
         pub page_size: u32,        // 4
@@ -16,7 +16,7 @@ pub mod table {
         pub relationship_loc: u32, // 4
     }
 
-    impl TableHeader {
+    impl FileHeader {
         pub fn check_correct(&self) -> Result<(), String> {
             if self.signature == 0x4442 && self.version == 0 {
                 return Ok(());
